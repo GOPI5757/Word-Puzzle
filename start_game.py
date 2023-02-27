@@ -21,17 +21,18 @@ Config.set('graphics', 'width', str(width))
 Config.set('graphics', 'height', str(height))
 match_sound = SoundLoader.load('match_sound.wav')
 wrong_sound = SoundLoader.load('wrong_sound.wav')
+win_sound = SoundLoader.load('win_sound.wav')
 
 
 class MainApp(App):
-    def __init__(self, words, words_count, size, /, *args, **kwargs):
-        self.words = words
+    def __init__(self, words_count, size, /, *args, **kwargs):
         self.word_count = words_count
         self.press_handler = None
         self.title = "Word Puzzle"
         self.timer_running = True
         self.size = size
         super().__init__(*args, **kwargs)
+        self.ender = None
 
     def on_stop(self):
         self.timer_running = False
@@ -39,8 +40,7 @@ class MainApp(App):
 
     def build(self):
         layout = BoxLayout(orientation="vertical")
-        board, words = generate(
-            self.size, self.size, self.words, self.word_count)
+        board, words = generate(self.size, self.word_count)
 
         self.score_display = BoxLayout()
         self.score_display.size_hint = (1, 0.1)
@@ -68,20 +68,42 @@ class MainApp(App):
         threading.Thread(target=timer).start()
         self.press_handler = PressHandler(self)
         self.game_board = GameBoard(board, self.press_handler)
-        self.words_display = GridLayout(cols=5, rows=5)
+        self.words_display = GridLayout(cols=5, rows=10)
         self.words_display.size_hint = (1, 0.2)
         label_dict = {}
         self.added_words = {}
         for key, word in words.items():
             if word not in label_dict:
                 label_dict[word] = Button(
-                    font_name="font\gamefont.ttf", disabled=True, background_disabled_normal="word_texture.png", text=word, border=(5, 5, 5, 5), disabled_color=(0, 0, 0, 1), background_color=word_color, font_size=12)
+                    font_name="font\gamefont.ttf", disabled=True, background_disabled_normal="word_texture.png", text=word, border=(1, 1, 1, 1), disabled_color=(0, 0, 0, 1), background_color=word_color, font_size=10)
                 self.words_display.add_widget(label_dict[word])
             self.added_words[key] = label_dict[word]
 
         layout.add_widget(self.game_board)
         layout.add_widget(self.words_display)
 
+        def end():
+            layout.clear_widgets()
+            with layout.canvas:
+                Color(0.6, 1, 1, 1)
+                Rectangle(pos=(0, 0), size=(10000, 10000))
+
+            score = Button(font_name="font\gamefont.ttf",
+                                     font_size=36,
+                                     text=f"You have completed\n\n   the word puzzle\n\n  in {time_display.text}!",
+                                     background_color=(0, 0, 0, 0),
+                                     color=(0, 0, 0, 1))
+            exit_to_main = Button(
+                text="Exit", font_name="font\gamefont.ttf", font_size=16,
+                background_down="menu_texture_pressed.png", background_normal="menu_texture.png",
+                background_color=(0, 0.8, 0, 1), border=(1, 1, 1, 1), color=(0, 0, 0, 1), on_press=self.stop)
+
+            exit_to_main.size_hint = ('.2', '.1')
+            exit_to_main.pos_hint = {'x': 0.4}
+            layout.add_widget(score)
+            layout.add_widget(exit_to_main)
+
+        self.ender = end
         return layout
 
 
@@ -93,8 +115,12 @@ class PressHandler:
         self.parent = parent
         self.completed = set()
         self.found_words = set()
+        self.word_count = None
 
     def __call__(self, i, j, button):
+        if self.word_count is None:
+            self.word_count = len(self.parent.added_words.values())
+
         if (i, j) in self.completed:
             return
         if not self.first_click:
@@ -118,6 +144,11 @@ class PressHandler:
                 self.parent.game_board.board[x
                                              + ox*i][y+oy*i].background_color = (0, 1, 0, 1)
                 self.completed.add((x+ox*i, y+oy*i))
+
+            if len(self.found_words) == self.word_count:
+                win_sound.play()
+                self.parent.ender()
+
         else:
             def color_switch(ax, ay, bx, by):
                 self.parent.game_board.board[ax][ay].background_color = (
