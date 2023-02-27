@@ -18,8 +18,6 @@ menu_change_sound = SoundLoader.load("menu_change.wav")
 class MainMenu(App):
 
     def __init__(self):
-        self.difficultymap = {"Easy": (10, 7), "Normal": (
-            15, 10), "Hard": (25, 15), "Impossible": (40, 25)}
         super().__init__()
 
     def build(self):
@@ -41,8 +39,7 @@ class MainMenu(App):
         def play(*arg):
             menu_change_sound.play()
             self.stop()
-            n, size = self.difficultymap[difficulty_button.text]
-            MainApp(n, size).run()
+            MainApp(difficulty_button.text).run()
             self.run()
 
         play_button = Button(

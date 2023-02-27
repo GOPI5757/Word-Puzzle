@@ -12,6 +12,7 @@ from kivy.core.text import FontContextManager as FCM
 from kivy.graphics import Color, Rectangle
 import threading
 import time
+import json
 
 grid_color = (0.6, 1, 1, 1)
 word_color = (0.7, 0.9, 0.3, 1)
@@ -25,14 +26,16 @@ win_sound = SoundLoader.load('win_sound.wav')
 
 
 class MainApp(App):
-    def __init__(self, words_count, size, /, *args, **kwargs):
-        self.word_count = words_count
+    def __init__(self, difficulty, /, *args, **kwargs):
+        self.difficulty = difficulty
+        self.word_count, self.size = {"Easy": (10, 7), "Normal": (
+            15, 10), "Hard": (25, 15), "Impossible": (40, 25)}[self.difficulty]
         self.press_handler = None
         self.title = "Word Puzzle"
         self.timer_running = True
-        self.size = size
         super().__init__(*args, **kwargs)
         self.ender = None
+        self.seconds = 0
 
     def on_stop(self):
         self.timer_running = False
@@ -52,11 +55,10 @@ class MainApp(App):
         score = 0
 
         def timer():
-            seconds = 0
             while self.timer_running:
-                seconds += 1
+                self.seconds += 1
                 time.sleep(1)
-                mins, sec = divmod(seconds, 60)
+                mins, sec = divmod(self.seconds, 60)
                 hour, mins = divmod(mins, 60)
                 time_display.text = f"Time: {hour:0>2}:{mins:0>2}:{sec:0>2}"
 
@@ -83,16 +85,28 @@ class MainApp(App):
         layout.add_widget(self.words_display)
 
         def end():
+            try:
+                highscores = json.load(open("highscores.json", "r"))
+            except:
+                highscores = {}
+
+            if self.difficulty not in highscores:
+                highscores[self.difficulty] = self.seconds
+            else:
+                highscores[self.difficulty] = min(
+                    self.seconds, highscores[self.difficulty])
+
+            json.dump(highscores, open("highscores.json", "w"))
             layout.clear_widgets()
             with layout.canvas:
                 Color(0.6, 1, 1, 1)
                 Rectangle(pos=(0, 0), size=(10000, 10000))
 
             score = Button(font_name="font\gamefont.ttf",
-                                     font_size=36,
-                                     text=f"You have completed\n\n   the word puzzle\n\n  in {time_display.text}!",
-                                     background_color=(0, 0, 0, 0),
-                                     color=(0, 0, 0, 1))
+                           font_size=36,
+                           text=f"You have completed\n\n   the word puzzle\n\n  in {time_display.text}!",
+                           background_color=(0, 0, 0, 0),
+                           color=(0, 0, 0, 1))
             exit_to_main = Button(
                 text="Exit", font_name="font\gamefont.ttf", font_size=16,
                 background_down="menu_texture_pressed.png", background_normal="menu_texture.png",
