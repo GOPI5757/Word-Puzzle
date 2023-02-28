@@ -13,6 +13,7 @@ from kivy.graphics import Color, Rectangle
 import threading
 import time
 import json
+from packages.resource import resource
 
 grid_color = (0.6, 1, 1, 1)
 word_color = (0.7, 0.9, 0.3, 1)
@@ -20,9 +21,9 @@ width = 600
 height = 750
 Config.set('graphics', 'width', str(width))
 Config.set('graphics', 'height', str(height))
-match_sound = SoundLoader.load('sounds\match_sound.wav')
-wrong_sound = SoundLoader.load('sounds\wrong_sound.wav')
-win_sound = SoundLoader.load('sounds\win_sound.wav')
+match_sound = SoundLoader.load(resource(r'sounds\match_sound.wav'))
+wrong_sound = SoundLoader.load(resource(r'sounds\wrong_sound.wav'))
+win_sound = SoundLoader.load(resource(r'sounds\win_sound.wav'))
 
 
 class MainApp(App):
@@ -42,13 +43,13 @@ class MainApp(App):
         return super().on_stop()
 
     def build(self):
-        self.icon = r'files\icon.ico'
+        self.icon = resource(r'files\icon.ico')
         layout = BoxLayout(orientation='vertical')
         board, words = generate(self.size, self.word_count)
 
         self.score_display = BoxLayout()
         self.score_display.size_hint = (1, 0.1)
-        time_display = Button(font_name='font\gamefont.ttf',
+        time_display = Button(font_name=resource(r'font\gamefont.ttf'),
                               text='Time: 00:00:00', background_disabled_normal='', color=(1, 1, 1, 1), background_color=(0, 0, 0, 1), font_size=16, background_normal='')
         self.score_display.add_widget(time_display)
         self.timer_running = True
@@ -78,7 +79,7 @@ class MainApp(App):
         for key, word in words.items():
             if word not in label_dict:
                 label_dict[word] = Button(
-                    font_name='font\gamefont.ttf', disabled=True, background_disabled_normal=r'images\word_texture.png', text=word, border=(1, 1, 1, 1), disabled_color=(0, 0, 0, 1), background_color=word_color, font_size=10)
+                    font_name=resource(r'font\gamefont.ttf'), disabled=True, background_disabled_normal=resource(r'images\word_texture.png'), text=word, border=(1, 1, 1, 1), disabled_color=(0, 0, 0, 1), background_color=word_color, font_size=10)
                 self.words_display.add_widget(label_dict[word])
             self.added_words[key] = label_dict[word]
 
@@ -87,7 +88,8 @@ class MainApp(App):
 
         def end():
             try:
-                highscores = json.load(open(r'files\highscores.json', 'r'))
+                highscores = json.load(
+                    open(resource(r'files\highscores.json'), 'r'))
             except:
                 highscores = {}
 
@@ -97,20 +99,21 @@ class MainApp(App):
                 highscores[self.difficulty] = min(
                     self.seconds, highscores[self.difficulty])
 
-            json.dump(highscores, open(r'files\highscores.json', 'w'))
+            json.dump(highscores, open(
+                resource(r'files\highscores.json'), 'w'))
             layout.clear_widgets()
             with layout.canvas:
                 Color(0.6, 1, 1, 1)
                 Rectangle(pos=(0, 0), size=(10000, 10000))
 
-            score = Button(font_name='font\gamefont.ttf',
+            score = Button(font_name=resource('font\gamefont.ttf'),
                            font_size=36,
                            text=f'You have completed\n\n   the word puzzle\n\n  in {time_display.text}!',
                            background_color=(0, 0, 0, 0),
                            color=(0, 0, 0, 1))
             exit_to_main = Button(
-                text='Exit', font_name='font\gamefont.ttf', font_size=16,
-                background_down=r'images\menu_texture_pressed.png', background_normal=r'images\menu_texture.png',
+                text='Exit', font_name=resource('font\gamefont.ttf'), font_size=16,
+                background_down=resource('images\menu_texture_pressed.png'), background_normal=resource(r'images\menu_texture.png'),
                 background_color=(0, 0.8, 0, 1), border=(1, 1, 1, 1), color=(0, 0, 0, 1), on_press=self.stop)
 
             exit_to_main.size_hint = ('.2', '.1')
@@ -199,6 +202,6 @@ class GameBoard(GridLayout):
         for i in range(self.rows):
             for j in range(self.cols):
                 self.board[i][j] = Button(
-                    text=self.board[i][j], on_press=partial(pressed, i, j), font_name=r'font\gamefont.ttf',
-                    font_size=18, color=(0, 0, 0, 1), background_normal=r'images\board_texture.png', background_color=(0.6, 1, 1, 1), background_down=r'images\board_texture_pressed.png', border=(0, 0, 0, 0))
+                    text=self.board[i][j], on_press=partial(pressed, i, j), font_name=resource(r'font\gamefont.ttf'),
+                    font_size=18, color=(0, 0, 0, 1), background_normal=resource(r'images\board_texture.png'), background_color=(0.6, 1, 1, 1), background_down=r'images\board_texture_pressed.png', border=(0, 0, 0, 0))
                 self.add_widget(self.board[i][j])

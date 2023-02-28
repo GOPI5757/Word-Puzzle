@@ -1,5 +1,6 @@
 import random
 from string import ascii_uppercase
+from packages.resource import resource
 
 orientations = [(-1, -1), (-1, 0), (-1, 1),
                 (0, -1), (0, 1), (1, -1), (1, 0), (1, 1)]
@@ -14,7 +15,7 @@ def is_palindrome(word):
 
 def generate(size, word_count=None):
     wordlist = open(
-        r'files\words.txt').read().splitlines()
+        resource(r'files\words.txt')).read().splitlines()
     if word_count == None or word_count > len(wordlist):
         word_count = len(wordlist)
     board = [[None]*size for _ in range(size)]
