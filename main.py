@@ -57,7 +57,7 @@ class MainMenu(App):
                 background_color=(0, 0.8, 0, 1), border=(1, 1, 1, 1), color=(0, 0, 0, 1), on_press=lambda _: (self.stop(), MainMenu().run()))
             exit_to_main_button.size_hint = ('.3', '.085')
             exit_to_main_button.pos_hint = {'x': 0.35, 'y': 0.15}
-            file = open('highscores.json')
+            file = open(r'files\highscores.json')
             scores = json.load(file)
 
             s = ''

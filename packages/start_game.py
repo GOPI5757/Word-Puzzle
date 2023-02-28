@@ -147,7 +147,17 @@ class PressHandler:
 
         self.first_click = False
         key = (self.first_coord, (i, j))
-        if key in self.parent.added_words and self.parent.added_words[key] not in self.found_words:
+
+        def collision_free(key):  # make sure any of letter is not used already
+            (x, y), (ex, ey) = key
+            length = len(self.parent.added_words[key].text)
+            ox, oy = (ex-x)//(length-1), (ey-y)//(length-1)
+            for i in range(length):
+                if (x+ox*i, y+oy*i) in self.completed:
+                    return False
+            return True
+
+        if key in self.parent.added_words and self.parent.added_words[key] not in self.found_words and collision_free(key):
             match_sound.play()
             self.parent.score_function()
             self.found_words.add(self.parent.added_words[key])
