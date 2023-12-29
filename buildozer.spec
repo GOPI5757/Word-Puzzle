@@ -1,7 +1,7 @@
 [app]
 
 # (str) Title of your application
-title = Word Puzzle
+title = Word Puzzle Test
 
 # (str) Package name
 package.name = myapp
